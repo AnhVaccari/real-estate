@@ -1,10 +1,10 @@
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { app } from '../firebase';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-export default function CreateListing() {
+export default function UpdateListing() {
     const [files, setFiles] = useState([]);
     const [formData, setFormData] = useState({
         imageUrls: [],
@@ -26,7 +26,21 @@ export default function CreateListing() {
     const [loading, setLoading] = useState(false);
     const { currentUser } = useSelector(state => state.user);
     const navigate = useNavigate();
-    console.log(formData);
+    const params = useParams();
+
+    useEffect(() => {
+        const fetchListing = async () => {
+            const listingId = params.listingId;
+            const res = await fetch(`/api/listing/get/${listingId}`);
+            const data = await res.json();
+            if (data.success === false) {
+                console.log(data.message);
+                return;
+            }
+            setFormData(data.listing);
+        }
+        fetchListing();
+    }, []);
 
     const handleImageSubmit = () => {
         if (files.length > 0 && files.length + formData.imageUrls.length < 7) {
@@ -114,7 +128,7 @@ export default function CreateListing() {
             if (+formData.regularPrice < +formData.discountPrice) return setError('Discount price must be lower than regular price');
             setLoading(true);
             setError(false);
-            const res = await fetch('/api/listing/create', {
+            const res = await fetch(`/api/listing/update/${params.listingId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -125,6 +139,12 @@ export default function CreateListing() {
                 }),
             });
             const data = await res.json();
+
+            console.log(data);
+            if (!data.listing) {
+                console.log('Data does not contain listing', data);
+                return;
+            }
             setLoading(false);
             if (data.success === false) {
                 setError(data.message);
@@ -140,7 +160,7 @@ export default function CreateListing() {
 
     return (
         <main className="p-3 max-w-4xl mx-auto">
-            <h1 className="text-3xl font-semibold text-center my-7">Create a Listing</h1>
+            <h1 className="text-3xl font-semibold text-center my-7">Update a Listing</h1>
             <form onSubmit={handlesubmit} className="flex flex-col sm:flex-row gap-4">
                 <div className="flex flex-col gap-4 flex-1">
                     <input
@@ -306,7 +326,7 @@ export default function CreateListing() {
                     </div>
                     <p className='text-red-700 text-sm'>{imageUploadError && imageUploadError}</p>
                     {
-                        formData.imageUrls.length > 0 && formData.imageUrls.map((url, index) => (
+                        formData.imageUrls && formData.imageUrls.length > 0 && formData.imageUrls.map((url, index) => (
                             <div key={url} className='flex justify-between p-3 border items-center'>
                                 <img src={url} alt="listing image" className="w-20 h-20 object-contain rounded-lg" />
                                 <button type='button' onClick={() => handleremoveImage(index)} className='p-3 text-red-700 rounded-lg uppercase hover:opacity-75'>Delete</button>
@@ -315,7 +335,7 @@ export default function CreateListing() {
                     }
                     <button disabled={loading || uploading}
                         className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80">
-                        {loading ? 'Creating...' : 'Create listing'}
+                        {loading ? 'Creating...' : 'Update listing'}
                     </button>
                     {error && <p className="text-red-700 text-sm">{error}</p>}
                 </div>
