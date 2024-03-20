@@ -140,7 +140,6 @@ export default function UpdateListing() {
             });
             const data = await res.json();
 
-            console.log(data);
             if (!data.listing) {
                 console.log('Data does not contain listing', data);
                 return;
