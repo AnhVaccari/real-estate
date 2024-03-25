@@ -1,8 +1,11 @@
+
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import ListingItem from '../components/ListingItem';
 
 export default function Search() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [sidebardata, setSidebarData] = useState({
         searchTerm: '',
         type: 'all',
@@ -14,7 +17,6 @@ export default function Search() {
     });
     const [loading, setLoading] = useState(false);
     const [listings, setListings] = useState([]);
-    console.log(listings);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
@@ -40,16 +42,17 @@ export default function Search() {
 
         const fetchlistings = async () => {
             setLoading(true);
+
             const searchQuery = urlParams.toString();
             const res = await fetch(`/api/listing/get?${searchQuery}`);
             const data = await res.json();
-            setListings(data);
+
+            setListings(data.listings);
+            //console.log('Data: ', data.listings);
             setLoading(false);
         };
+
         fetchlistings();
-
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.search]);
 
 
@@ -145,7 +148,7 @@ export default function Search() {
                         <div className="flex gap-2">
                             <input
                                 type="checkbox"
-                                id="salet"
+                                id="sale"
                                 className="w-5"
                                 onChange={handleChange}
                                 checked={sidebardata.type === 'sale'}
@@ -208,9 +211,27 @@ export default function Search() {
                 </form>
             </div>
 
-            <div className="">
+            <div className="flex-1">
                 <h1 className="text-3xl font-semibold border-b p-3 text-slate-700 mt-5">Listing results: </h1>
+                <div className="p-7 flex flex-wrap gap-4">
+
+                    {!loading && listings.length === 0 && (
+                        <p className="text-xl text-slate-700">No listing found!</p>
+                    )
+                    }
+
+                    {loading && (
+                        <p className="text-xl text-slate-700 text-center w-full">Loading...</p>
+                    )}
+
+                    {!loading && listings && listings.map((listing) => (
+                        <ListingItem key={listing._id} listing={listing} />
+                    ))}
+
+
+                </div>
             </div>
-        </div>
+
+        </div >
     )
 } 
