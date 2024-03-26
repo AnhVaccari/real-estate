@@ -2,8 +2,6 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { MdLocationOn } from 'react-icons/md';
 
-
-
 export default function ListingItem({ listing }) {
 
     return (

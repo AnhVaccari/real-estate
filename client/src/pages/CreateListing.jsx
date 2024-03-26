@@ -26,7 +26,6 @@ export default function CreateListing() {
     const [loading, setLoading] = useState(false);
     const { currentUser } = useSelector(state => state.user);
     const navigate = useNavigate();
-    console.log(formData);
 
     const handleImageSubmit = () => {
         if (files.length > 0 && files.length + formData.imageUrls.length < 7) {

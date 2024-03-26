@@ -17,6 +17,7 @@ export default function Search() {
     });
     const [loading, setLoading] = useState(false);
     const [listings, setListings] = useState([]);
+    const [showMore, setShowMore] = useState(false);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
@@ -42,13 +43,19 @@ export default function Search() {
 
         const fetchlistings = async () => {
             setLoading(true);
+            setShowMore(false);
 
             const searchQuery = urlParams.toString();
             const res = await fetch(`/api/listing/get?${searchQuery}`);
             const data = await res.json();
 
+            if (data.listings.length > 8) {
+                setShowMore(true);
+            } else {
+                setShowMore(false);
+            }
+
             setListings(data.listings);
-            //console.log('Data: ', data.listings);
             setLoading(false);
         };
 
@@ -106,6 +113,21 @@ export default function Search() {
         navigate(`/search?${searchQuery}`);
     };
 
+    const onShowMoreClick = async () => {
+        const numberOfListings = listings.length;
+        const startIndex = numberOfListings;
+        const urlParams = new URLSearchParams(location.search);
+        urlParams.set('startIndex', startIndex);
+
+        const searchQuery = urlParams.toString();
+        const res = await fetch(`/api/listing/get?${searchQuery}`);
+        const data = await res.json();
+
+        if (data.listings.length < 9) {
+            setShowMore(false);
+        }
+        setListings([...listings, ...data.listings]);
+    };
 
     return (
         <div className="flex flex-col md:flex-row">
@@ -228,10 +250,15 @@ export default function Search() {
                         <ListingItem key={listing._id} listing={listing} />
                     ))}
 
+                    {showMore && (
+                        <button
+                            onClick={onShowMoreClick}
+                            className='text-green-700 hover:underline text-center w-full'>Show More
+                        </button>
+                    )}
 
                 </div>
             </div>
-
         </div >
     )
 } 
